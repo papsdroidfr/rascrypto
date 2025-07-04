@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block contenu %}
+<style>
+    .monitoring-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    .metric-card {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    .metric-card h2 {
+        margin-top: 0;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+    .metric-value {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #333;
+        text-align: center;
+    }
+    .metric-details {
+        font-size: 0.9em;
+        color: #666;
+    }
+    .progress-bar {
+        width: 100%;
+        background-color: #e0e0e0;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+    .progress-bar-fill {
+        height: 20px;
+        background-color: #4CAF50;
+        width: 0%; /* Sera mis à jour par le JS */
+        text-align: center;
+        line-height: 20px;
+        color: white;
+        transition: width 0.5s ease-in-out;
+    }
+    #cpu-cores-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .core-bar { flex: 1; min-width: 40px; }
+</style>
+
+<h1><img src="https://www.raspberrypi.com/app/uploads/2022/02/COLOUR-LOGO.png" alt="RPi" style="height: 40px; vertical-align: middle;"> Monitoring du Raspberry Pi</h1>
+
+<div class="monitoring-grid">
+    <div class="metric-card">
+        <h2>🌡️ Température CPU</h2>
+        <div class="metric-value" id="cpu-temp">-- °C</div>
+    </div>
+
+    <div class="metric-card">
+        <h2>⚙️ Usage CPU</h2>
+        <div class="metric-value" id="cpu-usage">-- %</div>
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="cpu-bar"></div>
+        </div>
+        <div id="cpu-cores-container" class="metric-details" style="margin-top: 15px;"></div>
+    </div>
+
+    <div class="metric-card">
+        <h2>🧠 Mémoire RAM</h2>
+        <div class="metric-value" id="ram-percent">-- %</div>
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="ram-bar"></div>
+        </div>
+        <p class="metric-details" id="ram-details">-- / -- Go</p>
+    </div>
+    
+    <div class="metric-card">
+        <h2>💾 Espace Disque</h2>
+        <div class="metric-value" id="disk-percent">-- %</div>
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="disk-bar"></div>
+        </div>
+        <p class="metric-details" id="disk-details">-- / -- Go</p>
+    </div>
+</div>
+
+<script>
+function updateStats() {
+    fetch('/api/system-stats')
+        .then(response => response.json())
+        .then(data => {
+            // Température CPU
+            document.getElementById('cpu-temp').innerText = data.cpu_temp + ' °C';
+            
+            // Usage CPU global
+            document.getElementById('cpu-usage').innerText = data.cpu_usage.toFixed(1) + ' %';
+            const cpuBar = document.getElementById('cpu-bar');
+            cpuBar.style.width = data.cpu_usage + '%';
+            cpuBar.innerText = data.cpu_usage.toFixed(1) + '%';
+            
+            // Usage CPU par cœur
+            const coresContainer = document.getElementById('cpu-cores-container');
+            coresContainer.innerHTML = ''; // On vide pour reconstruire
+            data.cpu_cores_usage.forEach((coreUsage, index) => {
+                const coreDiv = document.createElement('div');
+                coreDiv.className = 'core-bar';
+                coreDiv.innerHTML = `
+                    <small>Cœur ${index + 1}</small>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: ${coreUsage}%; font-size: 0.8em;">${coreUsage.toFixed(0)}%</div>
+                    </div>
+                `;
+                coresContainer.appendChild(coreDiv);
+            });
+            
+            // Usage RAM
+            document.getElementById('ram-percent').innerText = data.ram.percent + ' %';
+            document.getElementById('ram-details').innerText = `${data.ram.used} / ${data.ram.total} Go`;
+            const ramBar = document.getElementById('ram-bar');
+            ramBar.style.width = data.ram.percent + '%';
+            ramBar.innerText = data.ram.percent + '%';
+            
+            // Usage Disque
+            document.getElementById('disk-percent').innerText = data.disk.percent + ' %';
+            document.getElementById('disk-details').innerText = `${data.disk.used} / ${data.disk.total} Go`;
+            const diskBar = document.getElementById('disk-bar');
+            diskBar.style.width = data.disk.percent + '%';
+            diskBar.innerText = data.disk.percent + '%';
+        })
+        .catch(error => console.error('Erreur lors de la mise à jour des stats:', error));
+}
+
+// Mettre à jour les stats toutes les 5 secondes
+setInterval(updateStats, 5000);
+
+// Lancer une première mise à jour dès le chargement de la page
+document.addEventListener('DOMContentLoaded', updateStats);
+</script>
+{% endblock %}

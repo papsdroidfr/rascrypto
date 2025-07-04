@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block contenu %}
+<style>
+    .summary-stats {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+    }
+    .stat-item {
+        text-align: center;
+        padding: 0 15px;
+    }
+    .stat-item .label {
+        font-size: 0.9em;
+        color: #666;
+        text-transform: uppercase;
+    }
+    .stat-item .value {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+    .stat-item .change {
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+    .color-green { color: #26a69a; }
+    .color-red { color: #ef5350; }
+</style>
+
+<h1>📈 Dashboard des Cryptomonnaies</h1>
+<p>Sélectionnez une cryptomonnaie et une période pour afficher l'historique des cours.</p>
+
+<div class="controls">
+    <div class="form-group">
+        <label for="select-crypto">Choisir une crypto :</label>
+        <select id="select-crypto">
+            {% for symbol, name in cryptos.items() %}
+            <option value="{{ symbol }}" {% if symbol == 'ETHUSDC' %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="select-profondeur">Choisir une période :</label>
+        <select id="select-profondeur">
+            <option value="1j">1 Jour</option>
+            <option value="1s">1 Semaine</option>
+            <option value="1m" selected>1 Mois</option>
+            <option value="1a">1 An</option>
+            <option value="5a">5 Ans</option>
+        </select>
+    </div>
+</div>
+
+<div class="summary-stats">
+    <div class="stat-item">
+        <div class="label">Ouverture</div>
+        <div class="value" id="stat-open">--</div>
+    </div>
+    <div class="stat-item">
+        <div class="label">Fermeture</div>
+        <div class="value" id="stat-close">--</div>
+    </div>
+    <div class="stat-item">
+        <div class="label">Variation</div>
+        <div class="change" id="stat-diff">--</div>
+    </div>
+    <div class="stat-item">
+        <div class="label">Variation %</div>
+        <div class="change" id="stat-percent">--</div>
+    </div>
+</div>
+<div id="chart-container" style="width:100%; min-height:500px;">
+    <p class="loading">Chargement du graphique...</p>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cryptoSelect = document.getElementById('select-crypto');
+        const profondeurSelect = document.getElementById('select-profondeur');
+        const chartContainer = document.getElementById('chart-container');
+
+        function updateChart() {
+            const crypto = cryptoSelect.value;
+            const profondeur = profondeurSelect.value;
+            
+            chartContainer.innerHTML = '<p class="loading">Chargement du graphique...</p>';
+
+            fetch(`/api/historique?crypto=${crypto}&profondeur=${profondeur}`)
+                .then(response => response.json())
+                .then(graphJSON => {
+                    chartContainer.innerHTML = '';
+                    if (graphJSON.error) {
+                        chartContainer.innerHTML = `<p style="color: red;">${graphJSON.error}</p>`;
+                    } else {
+                        Plotly.newPlot('chart-container', graphJSON.data, graphJSON.layout);
+                        
+                        const stats = graphJSON.summary_stats;
+                        if (stats && stats.open !== undefined) {
+                            
+                            // --- MODIFICATION DE LA MISE EN FORME CI-DESSOUS ---
+                            
+                            // On remplace .toLocaleString() par .toFixed(2) et on ajoute " USDC"
+                            document.getElementById('stat-open').innerText = stats.open.toFixed(2) + ' USDC';
+                            document.getElementById('stat-close').innerText = stats.close.toFixed(2) + ' USDC';
+                            
+                            // Pour la variation, on garde le signe
+                            const sign = stats.diff >= 0 ? '+' : '';
+                            document.getElementById('stat-diff').innerText = sign + stats.diff.toFixed(2) + ' USDC';
+                            document.getElementById('stat-percent').innerText = sign + stats.percent.toFixed(2) + ' %';
+                            
+                            const changeColor = stats.diff >= 0 ? 'color-green' : 'color-red';
+                            document.getElementById('stat-diff').className = 'change ' + changeColor;
+                            document.getElementById('stat-percent').className = 'change ' + changeColor;
+                        } else {
+                            // Remise à zéro si pas de stats
+                            document.getElementById('stat-open').innerText = '--';
+                            document.getElementById('stat-close').innerText = '--';
+                            document.getElementById('stat-diff').innerText = '--';
+                            document.getElementById('stat-percent').innerText = '--';
+                            document.getElementById('stat-diff').className = 'change';
+                            document.getElementById('stat-percent').className = 'change';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération des données:', error);
+                    chartContainer.innerHTML = `<p style="color: red;">Une erreur de communication est survenue. Le serveur est peut-être inaccessible.</p>`;
+                });
+        }
+        
+        updateChart();
+        cryptoSelect.addEventListener('change', updateChart);
+        profondeurSelect.addEventListener('change', updateChart);
+    });
+</script>
+
+{% endblock %}

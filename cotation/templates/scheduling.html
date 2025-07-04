@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block contenu %}
+<h1>Planifier l'envoi de rapports par e-mail</h1>
+<p>Configurez des envois automatiques de graphiques de cryptomonnaies.</p>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="metric-card" style="margin-bottom: 20px;">
+    <h2>Ajouter une nouvelle planification</h2>
+    <form method="POST" action="{{ url_for('scheduling_page') }}">
+        <div class="form-group">
+            <label for="symbol">Cryptomonnaie :</label>
+            <select id="symbol" name="symbol" class="form-control" required>
+                {% for symbol_key, symbol_name in cryptos.items() %}
+                <option value="{{ symbol_key }}">{{ symbol_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="recipient_email">Email du destinataire :</label>
+            <input type="email" id="recipient_email" name="recipient_email" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="frequency">Fréquence d'envoi :</label>
+            <select id="frequency" name="frequency" class="form-control" required>
+                <option value="daily">Quotidien (chaque jour à 7h00)</option>
+                <option value="weekly">Hebdomadaire (chaque lundi à 7h00)</option>
+                <option value="monthly">Mensuel (le 1er du mois à 7h00)</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Planifier l'envoi</button>
+    </form>
+</div>
+
+<h2>Planifications actives</h2>
+{% if schedules %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Crypto</th>
+            <th>Destinataire</th>
+            <th>Fréquence</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for schedule in schedules %}
+        <tr>
+            <td>{{ schedule[0] }}</td>
+            <td>{{ schedule[1] }}</td>
+            <td>{{ schedule[2] }}</td>
+            <td>{{ schedule[3] }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('delete_schedule', schedule_id=schedule[0]) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?');">
+                    <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucun envoi n'est actuellement planifié.</p>
+{% endif %}
+
+<style> /* Styles pour les alertes et formulaires */
+    .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; }
+    .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+    .alert-danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+    .form-group { margin-bottom: 1rem; }
+    .form-control { display: block; width: 100%; padding: .375rem .75rem; font-size: 1rem; line-height: 1.5; color: #495057; background-color: #fff; background-clip: padding-box; border: 1px solid #ced4da; border-radius: .25rem; }
+    .btn { display: inline-block; font-weight: 400; text-align: center; white-space: nowrap; vertical-align: middle; user-select: none; border: 1px solid transparent; padding: .375rem .75rem; font-size: 1rem; line-height: 1.5; border-radius: .25rem; }
+    .btn-primary { color: #fff; background-color: #007bff; border-color: #007bff; }
+    .btn-danger { color: #fff; background-color: #dc3545; border-color: #dc3545; }
+    .table { width: 100%; margin-bottom: 1rem; background-color: transparent; border-collapse: collapse; }
+    .table th, .table td { padding: .75rem; vertical-align: top; border-top: 1px solid #dee2e6; }
+    .table thead th { vertical-align: bottom; border-bottom: 2px solid #dee2e6; }
+</style>
+{% endblock %}
