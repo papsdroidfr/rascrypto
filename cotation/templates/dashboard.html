@@ -72,8 +72,12 @@
         <div class="change" id="stat-diff">--</div>
     </div>
     <div class="stat-item">
-        <div class="label">Variation %</div>
+        <div class="label">%</div>
         <div class="change" id="stat-percent">--</div>
+    </div>
+        <div class="stat-item">
+        <div class="label">rsi</div>
+        <div class="change" id="stat-rsi">--</div>
     </div>
 </div>
 <div id="chart-container" style="width:100%; min-height:500px;">
@@ -106,13 +110,9 @@
                         const stats = graphJSON.summary_stats;
                         if (stats && stats.open !== undefined) {
                             
-                            // --- MODIFICATION DE LA MISE EN FORME CI-DESSOUS ---
-                            
-                            // On remplace .toLocaleString() par .toFixed(2) et on ajoute " USDC"
                             document.getElementById('stat-open').innerText = stats.open.toFixed(2) + ' USDC';
                             document.getElementById('stat-close').innerText = stats.close.toFixed(2) + ' USDC';
                             
-                            // Pour la variation, on garde le signe
                             const sign = stats.diff >= 0 ? '+' : '';
                             document.getElementById('stat-diff').innerText = sign + stats.diff.toFixed(2) + ' USDC';
                             document.getElementById('stat-percent').innerText = sign + stats.percent.toFixed(2) + ' %';
@@ -120,12 +120,16 @@
                             const changeColor = stats.diff >= 0 ? 'color-green' : 'color-red';
                             document.getElementById('stat-diff').className = 'change ' + changeColor;
                             document.getElementById('stat-percent').className = 'change ' + changeColor;
+
+                            document.getElementById('stat-rsi').innerText = stats.rsi.toFixed(2) + ' %';
+                            
                         } else {
                             // Remise à zéro si pas de stats
                             document.getElementById('stat-open').innerText = '--';
                             document.getElementById('stat-close').innerText = '--';
                             document.getElementById('stat-diff').innerText = '--';
                             document.getElementById('stat-percent').innerText = '--';
+                            document.getElementById('stat-rsi').innerText = '--';
                             document.getElementById('stat-diff').className = 'change';
                             document.getElementById('stat-percent').className = 'change';
                         }
