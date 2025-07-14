@@ -34,6 +34,7 @@ class SimpleEmailer:
                     <tr><td style="padding: 4px;">Ouverture :</td><td style="padding: 4px;">{stats_30d['open']:.2f} USDC</td></tr>
                     <tr><td style="padding: 4px;">Fermeture :</td><td style="padding: 4px;">{stats_30d['close']:.2f} USDC</td></tr>
                     <tr style="font-weight: bold; color: {color_30d};"><td style="padding: 4px;">Variation :</td><td style="padding: 4px;">{sign_30d}{stats_30d['diff']:.2f} USDC ({sign_30d}{stats_30d['percent']:.2f} %)</td></tr>
+                    <tr><td style="padding: 4px;">RSI fermeture :</td><td style="padding: 4px;">{stats_30d['rsi']:.2f} %</td></tr>
                 </table>
                 <img src="{{img0}}"><br><br>
 
@@ -42,10 +43,11 @@ class SimpleEmailer:
                     <tr><td style="padding: 4px;">Ouverture :</td><td style="padding: 4px;">{stats_7d['open']:.2f} USDC</td></tr>
                     <tr><td style="padding: 4px;">Fermeture :</td><td style="padding: 4px;">{stats_7d['close']:.2f} USDC</td></tr>
                     <tr style="font-weight: bold; color: {color_7d};"><td style="padding: 4px;">Variation :</td><td style="padding: 4px;">{sign_7d}{stats_7d['diff']:.2f} USDC ({sign_7d}{stats_7d['percent']:.2f} %)</td></tr>
+                    <tr><td style="padding: 4px;">RSI fermeture:</td><td style="padding: 4px;">{stats_7d['rsi']:.2f} %</td></tr>
                 </table>
                 <img src="{{img1}}">
 
-                <p style="margin-top: 30px;">Cordialement,<br>Votre Serveur Raspberry Pi</p>
+                <p style="margin-top: 30px;">Cordialement,<br>Votre Serveur RasCrypto.</p>
             </body>
         </html>
         """

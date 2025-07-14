@@ -13,15 +13,17 @@ class TechnicalChartBuilder:
         if df is None or df.is_empty():
             return {}
             
-        open_price = df.item(0, 'Open')
-        close_price = df.item(-1, 'Close')
-        diff = close_price - open_price
+        open_price = df.item(0, 'Open') if 'Open' in df.columns else None
+        close_price = df.item(-1, 'Close') if 'Close' in df.columns else None
+        diff = close_price - open_price if open_price is not None and close_price is not None else None
+        rsi = df.item(-1, 'RSI_14') if 'RSI_14' in df.columns else None
         
         return {
             "open": round(open_price, 2),
             "close": round(close_price, 2),
             "diff": round(diff, 2),
-            "percent": round((diff / open_price) * 100, 2) if open_price != 0 else 0
+            "percent": round((diff / open_price) * 100, 2) if open_price != 0 else 0,
+            "rsi": round(rsi, 2) if rsi is not None else None ,
         }
         
         
